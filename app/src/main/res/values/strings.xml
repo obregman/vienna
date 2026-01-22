@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Vienna</string>
+    <string name="stocks">Stocks</string>
+    <string name="portfolio">Portfolio</string>
+    <string name="settings">Settings</string>
+    <string name="search">Search</string>
+    <string name="search_stocks">Search stocks…</string>
+    <string name="volume">Volume</string>
+    <string name="gainers">Gainers</string>
+    <string name="losers">Losers</string>
+    <string name="add_to_portfolio">Add to Portfolio</string>
+    <string name="in_portfolio">In Portfolio</string>
+    <string name="get_ai_analysis">Get AI Analysis</string>
+    <string name="refresh">Refresh</string>
+    <string name="loading">Loading…</string>
+    <string name="error_loading">Error loading data</string>
+    <string name="retry">Retry</string>
+    <string name="no_results">No results found</string>
+    <string name="recent_searches">Recent Searches</string>
+    <string name="clear_history">Clear History</string>
+    <string name="total_value">Total Value</string>
+    <string name="total_gain_loss">Total Gain/Loss</string>
+    <string name="empty_portfolio">Your portfolio is empty</string>
+    <string name="add_first_stock">Add your first stock to get started</string>
+    <string name="day_range">Day Range</string>
+    <string name="market_cap">Market Cap</string>
+    <string name="analysis_loading">Generating AI analysis…</string>
+    <string name="analysis_error">Unable to generate analysis</string>
+    <string name="sentiment_bullish">Bullish</string>
+    <string name="sentiment_bearish">Bearish</string>
+    <string name="sentiment_neutral">Neutral</string>
+    <string name="related_news">Related News</string>
+    <string name="key_points">Key Points</string>
+    <string name="days_held">%d days held</string>
+    <string name="offline_notice">You\'re offline. Showing cached data.</string>
+    <string name="data_delayed">Data may be delayed</string>
+    <string name="stock_added">Stock added to portfolio</string>
+    <string name="stock_removed">Stock removed from portfolio</string>
+    <string name="delete">Delete</string>
+</resources>
