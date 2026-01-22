@@ -10,6 +10,7 @@ import androidx.navigation.navArgument
 import com.vienna.app.presentation.screens.analysis.AnalysisScreen
 import com.vienna.app.presentation.screens.portfolio.PortfolioScreen
 import com.vienna.app.presentation.screens.search.SearchScreen
+import com.vienna.app.presentation.screens.settings.SettingsScreen
 import com.vienna.app.presentation.screens.stockdetail.StockDetailScreen
 import com.vienna.app.presentation.screens.stocklist.StockListScreen
 import java.net.URLDecoder
@@ -87,6 +88,10 @@ fun ViennaNavHost(
             AnalysisScreen(
                 onBackClick = { navController.popBackStack() }
             )
+        }
+
+        composable(NavRoutes.Settings.route) {
+            SettingsScreen()
         }
     }
 }

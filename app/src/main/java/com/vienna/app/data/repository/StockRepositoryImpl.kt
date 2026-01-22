@@ -1,8 +1,8 @@
 package com.vienna.app.data.repository
 
-import com.vienna.app.BuildConfig
 import com.vienna.app.data.local.database.dao.CachedStockDao
 import com.vienna.app.data.local.database.dao.SearchHistoryDao
+import com.vienna.app.data.local.datastore.SettingsDataStore
 import com.vienna.app.data.local.database.entity.CachedStockEntity
 import com.vienna.app.data.local.database.entity.SearchHistoryEntity
 import com.vienna.app.data.remote.api.StockApi
@@ -22,6 +22,7 @@ class StockRepositoryImpl @Inject constructor(
     private val stockApi: StockApi,
     private val cachedStockDao: CachedStockDao,
     private val searchHistoryDao: SearchHistoryDao,
+    private val settingsDataStore: SettingsDataStore,
     private val json: Json
 ) : StockRepository {
 
@@ -36,7 +37,12 @@ class StockRepositoryImpl @Inject constructor(
                 return Result.success(cachedMarketData!!)
             }
 
-            val response = stockApi.getTopGainersLosers(apiKey = BuildConfig.ALPHA_VANTAGE_API_KEY)
+            val apiKey = settingsDataStore.getAlphaVantageApiKey()
+            if (apiKey.isBlank()) {
+                return Result.failure(Exception("Please configure your Alpha Vantage API key in Settings"))
+            }
+
+            val response = stockApi.getTopGainersLosers(apiKey = apiKey)
             val marketData = MarketData(
                 topGainers = response.topGainers.map { it.toStock() },
                 topLosers = response.topLosers.map { it.toStock() },
@@ -61,7 +67,12 @@ class StockRepositoryImpl @Inject constructor(
                 return Result.success(quote.toStock())
             }
 
-            val response = stockApi.getGlobalQuote(symbol = symbol, apiKey = BuildConfig.ALPHA_VANTAGE_API_KEY)
+            val apiKey = settingsDataStore.getAlphaVantageApiKey()
+            if (apiKey.isBlank()) {
+                return Result.failure(Exception("Please configure your Alpha Vantage API key in Settings"))
+            }
+
+            val response = stockApi.getGlobalQuote(symbol = symbol, apiKey = apiKey)
             val quote = response.globalQuote ?: return Result.failure(Exception("Stock not found"))
 
             // Cache the result
@@ -88,7 +99,12 @@ class StockRepositoryImpl @Inject constructor(
 
     override suspend fun searchStocks(query: String): Result<List<SearchResult>> {
         return try {
-            val response = stockApi.searchSymbol(keywords = query, apiKey = BuildConfig.ALPHA_VANTAGE_API_KEY)
+            val apiKey = settingsDataStore.getAlphaVantageApiKey()
+            if (apiKey.isBlank()) {
+                return Result.failure(Exception("Please configure your Alpha Vantage API key in Settings"))
+            }
+
+            val response = stockApi.searchSymbol(keywords = query, apiKey = apiKey)
             val results = response.bestMatches.map { match ->
                 SearchResult(
                     symbol = match.symbol,

@@ -1,7 +1,7 @@
 package com.vienna.app.data.repository
 
-import com.vienna.app.BuildConfig
 import com.vienna.app.data.local.database.dao.AnalysisCacheDao
+import com.vienna.app.data.local.datastore.SettingsDataStore
 import com.vienna.app.data.local.database.entity.AnalysisCacheEntity
 import com.vienna.app.data.remote.api.ClaudeApi
 import com.vienna.app.data.remote.dto.ClaudeMessage
@@ -18,6 +18,7 @@ import javax.inject.Inject
 class AnalysisRepositoryImpl @Inject constructor(
     private val claudeApi: ClaudeApi,
     private val analysisCacheDao: AnalysisCacheDao,
+    private val settingsDataStore: SettingsDataStore,
     private val json: Json
 ) : AnalysisRepository {
 
@@ -41,6 +42,11 @@ class AnalysisRepositoryImpl @Inject constructor(
             }
 
             // Generate new analysis
+            val apiKey = settingsDataStore.getClaudeApiKey()
+            if (apiKey.isBlank()) {
+                return Result.failure(Exception("Please configure your Claude API key in Settings"))
+            }
+
             val prompt = buildAnalysisPrompt(symbol, companyName)
             val request = ClaudeRequest(
                 messages = listOf(
@@ -49,7 +55,7 @@ class AnalysisRepositoryImpl @Inject constructor(
             )
 
             val response = claudeApi.createMessage(
-                apiKey = BuildConfig.CLAUDE_API_KEY,
+                apiKey = apiKey,
                 request = request
             )
 

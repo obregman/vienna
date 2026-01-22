@@ -9,6 +9,7 @@ A stock recommendation and tracking Android app built with Kotlin and Jetpack Co
 - **Virtual Portfolio**: Track your stock investments without real money
 - **Portfolio Performance**: View gain/loss calculations and overall performance
 - **AI-Powered Analysis**: Get AI-generated stock analysis powered by Claude
+- **In-App Settings**: Configure API keys directly in the app
 
 ## Tech Stack
 
@@ -18,6 +19,7 @@ A stock recommendation and tracking Android app built with Kotlin and Jetpack Co
 - **Dependency Injection**: Hilt
 - **Networking**: Retrofit + OkHttp + Kotlin Serialization
 - **Local Database**: Room
+- **Preferences**: DataStore
 - **Async Operations**: Kotlin Coroutines + Flow
 - **Navigation**: Compose Navigation
 
@@ -26,7 +28,7 @@ A stock recommendation and tracking Android app built with Kotlin and Jetpack Co
 ```
 app/
 ├── data/
-│   ├── local/          # Room database, DAOs, entities
+│   ├── local/          # Room database, DataStore, DAOs, entities
 │   ├── remote/         # Retrofit APIs, DTOs
 │   └── repository/     # Repository implementations
 ├── domain/
@@ -44,26 +46,21 @@ app/
 ## Setup
 
 1. Clone the repository
-2. Copy `local.properties.example` to `local.properties`
-3. Add your API keys:
-   - Get a free Alpha Vantage API key from [alphavantage.co](https://www.alphavantage.co/support/#api-key)
-   - Get a Claude API key from [console.anthropic.com](https://console.anthropic.com/)
-4. Open in Android Studio and sync Gradle
-5. Run on an emulator or device (Android 8.0+)
+2. Open in Android Studio and sync Gradle
+3. Run on an emulator or device (Android 8.0+)
+4. Go to **Settings** (bottom navigation) and enter your API keys
 
 ## API Keys
 
-The app requires two API keys:
+The app requires two API keys, which you can enter in the **Settings** screen:
 
 - **Alpha Vantage**: Free stock market data API
+  - Get your free key at [alphavantage.co](https://www.alphavantage.co/support/#api-key)
+
 - **Claude API**: AI-powered stock analysis
+  - Get your key at [console.anthropic.com](https://console.anthropic.com/)
 
-Add these to your `local.properties` file:
-
-```properties
-ALPHA_VANTAGE_API_KEY=your_key_here
-CLAUDE_API_KEY=your_key_here
-```
+Your API keys are stored securely on your device using Android DataStore and are never shared.
 
 ## Requirements
 

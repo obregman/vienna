@@ -7,8 +7,10 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountBalanceWallet
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.TrendingUp
 import androidx.compose.material.icons.outlined.AccountBalanceWallet
+import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.TrendingUp
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
@@ -66,13 +68,20 @@ fun ViennaApp() {
             title = "Portfolio",
             selectedIcon = Icons.Filled.AccountBalanceWallet,
             unselectedIcon = Icons.Outlined.AccountBalanceWallet
+        ),
+        BottomNavItem(
+            route = NavRoutes.Settings.route,
+            title = "Settings",
+            selectedIcon = Icons.Filled.Settings,
+            unselectedIcon = Icons.Outlined.Settings
         )
     )
 
     // Only show bottom nav on main screens
     val showBottomBar = currentDestination?.route in listOf(
         NavRoutes.StockList.route,
-        NavRoutes.Portfolio.route
+        NavRoutes.Portfolio.route,
+        NavRoutes.Settings.route
     )
 
     Scaffold(

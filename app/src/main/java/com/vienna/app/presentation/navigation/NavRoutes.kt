@@ -20,6 +20,7 @@ sealed class NavRoutes(val route: String) {
             return "analysis/$symbol/$encodedName"
         }
     }
+    data object Settings : NavRoutes("settings")
 }
 
 sealed class BottomNavItem(

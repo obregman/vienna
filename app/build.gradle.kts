@@ -19,10 +19,6 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-
-        // API keys from local.properties
-        buildConfigField("String", "ALPHA_VANTAGE_API_KEY", "\"${project.findProperty("ALPHA_VANTAGE_API_KEY") ?: ""}\"")
-        buildConfigField("String", "CLAUDE_API_KEY", "\"${project.findProperty("CLAUDE_API_KEY") ?: ""}\"")
     }
 
     buildTypes {
@@ -97,4 +93,7 @@ dependencies {
 
     // Image Loading
     implementation(libs.coil.compose)
+
+    // DataStore
+    implementation(libs.datastore.preferences)
 }
