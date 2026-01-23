@@ -3,6 +3,7 @@ package com.vienna.app.presentation.screens.analysis
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.vienna.app.data.local.ErrorLogManager
 import com.vienna.app.domain.model.Sentiment
 import com.vienna.app.domain.model.StockAnalysis
 import com.vienna.app.domain.usecase.GetStockAnalysisUseCase
@@ -25,7 +26,8 @@ data class AnalysisUiState(
 @HiltViewModel
 class AnalysisViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
-    private val getStockAnalysisUseCase: GetStockAnalysisUseCase
+    private val getStockAnalysisUseCase: GetStockAnalysisUseCase,
+    private val errorLogManager: ErrorLogManager
 ) : ViewModel() {
 
     private val symbol: String = savedStateHandle.get<String>("symbol") ?: ""
@@ -58,6 +60,7 @@ class AnalysisViewModel @Inject constructor(
                     }
                 }
                 .onFailure { exception ->
+                    errorLogManager.logError("AnalysisViewModel", "Failed to generate analysis for $symbol", exception)
                     _uiState.update {
                         it.copy(
                             isLoading = false,

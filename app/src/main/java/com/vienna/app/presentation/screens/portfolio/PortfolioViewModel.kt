@@ -2,6 +2,7 @@ package com.vienna.app.presentation.screens.portfolio
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.vienna.app.data.local.ErrorLogManager
 import com.vienna.app.domain.model.PortfolioHolding
 import com.vienna.app.domain.usecase.GetPortfolioUseCase
 import com.vienna.app.domain.usecase.ManagePortfolioUseCase
@@ -26,7 +27,8 @@ data class PortfolioUiState(
 @HiltViewModel
 class PortfolioViewModel @Inject constructor(
     private val getPortfolioUseCase: GetPortfolioUseCase,
-    private val managePortfolioUseCase: ManagePortfolioUseCase
+    private val managePortfolioUseCase: ManagePortfolioUseCase,
+    private val errorLogManager: ErrorLogManager
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(PortfolioUiState())
@@ -81,6 +83,7 @@ class PortfolioViewModel @Inject constructor(
             try {
                 managePortfolioUseCase.removeFromPortfolio(holding.id)
             } catch (e: Exception) {
+                errorLogManager.logError("PortfolioViewModel", "Failed to remove holding from portfolio", e)
                 _uiState.update { it.copy(error = e.message) }
             }
         }

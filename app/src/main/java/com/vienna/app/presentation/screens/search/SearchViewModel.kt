@@ -2,6 +2,7 @@ package com.vienna.app.presentation.screens.search
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.vienna.app.data.local.ErrorLogManager
 import com.vienna.app.domain.model.SearchResult
 import com.vienna.app.domain.repository.StockRepository
 import com.vienna.app.domain.usecase.SearchStocksUseCase
@@ -33,7 +34,8 @@ data class SearchUiState(
 @HiltViewModel
 class SearchViewModel @Inject constructor(
     private val searchStocksUseCase: SearchStocksUseCase,
-    private val stockRepository: StockRepository
+    private val stockRepository: StockRepository,
+    private val errorLogManager: ErrorLogManager
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SearchUiState())
@@ -98,6 +100,7 @@ class SearchViewModel @Inject constructor(
                     }
                 }
                 .onFailure { exception ->
+                    errorLogManager.logError("SearchViewModel", "Search failed for query: $query", exception)
                     _uiState.update {
                         it.copy(
                             isLoading = false,

@@ -5,6 +5,7 @@ import androidx.room.Room
 import com.vienna.app.data.local.database.ViennaDatabase
 import com.vienna.app.data.local.database.dao.AnalysisCacheDao
 import com.vienna.app.data.local.database.dao.CachedStockDao
+import com.vienna.app.data.local.database.dao.ErrorLogDao
 import com.vienna.app.data.local.database.dao.PortfolioDao
 import com.vienna.app.data.local.database.dao.SearchHistoryDao
 import dagger.Module
@@ -25,7 +26,9 @@ object DatabaseModule {
             context,
             ViennaDatabase::class.java,
             ViennaDatabase.DATABASE_NAME
-        ).build()
+        )
+            .fallbackToDestructiveMigration()
+            .build()
     }
 
     @Provides
@@ -50,5 +53,11 @@ object DatabaseModule {
     @Singleton
     fun provideAnalysisCacheDao(database: ViennaDatabase): AnalysisCacheDao {
         return database.analysisCacheDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideErrorLogDao(database: ViennaDatabase): ErrorLogDao {
+        return database.errorLogDao()
     }
 }

@@ -1,5 +1,6 @@
 package com.vienna.app.data.repository
 
+import com.vienna.app.data.local.ErrorLogManager
 import com.vienna.app.data.local.database.dao.CachedStockDao
 import com.vienna.app.data.local.database.dao.SearchHistoryDao
 import com.vienna.app.data.local.datastore.SettingsDataStore
@@ -23,7 +24,8 @@ class StockRepositoryImpl @Inject constructor(
     private val cachedStockDao: CachedStockDao,
     private val searchHistoryDao: SearchHistoryDao,
     private val settingsDataStore: SettingsDataStore,
-    private val json: Json
+    private val json: Json,
+    private val errorLogManager: ErrorLogManager
 ) : StockRepository {
 
     private var cachedMarketData: MarketData? = null
@@ -53,6 +55,7 @@ class StockRepositoryImpl @Inject constructor(
             marketDataTimestamp = now
             Result.success(marketData)
         } catch (e: Exception) {
+            errorLogManager.logError("StockRepository", "Failed to get market data", e)
             cachedMarketData?.let { Result.success(it) } ?: Result.failure(e)
         }
     }
@@ -86,6 +89,7 @@ class StockRepositoryImpl @Inject constructor(
 
             Result.success(quote.toStock())
         } catch (e: Exception) {
+            errorLogManager.logError("StockRepository", "Failed to get stock quote for $symbol", e)
             // Try to return cached data on error
             val cached = cachedStockDao.getCachedStock(symbol)
             if (cached != null) {
@@ -116,6 +120,7 @@ class StockRepositoryImpl @Inject constructor(
             }
             Result.success(results)
         } catch (e: Exception) {
+            errorLogManager.logError("StockRepository", "Failed to search stocks for query: $query", e)
             Result.failure(e)
         }
     }

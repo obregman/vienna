@@ -1,5 +1,6 @@
 package com.vienna.app.data.repository
 
+import com.vienna.app.data.local.ErrorLogManager
 import com.vienna.app.data.local.database.dao.AnalysisCacheDao
 import com.vienna.app.data.local.datastore.SettingsDataStore
 import com.vienna.app.data.local.database.entity.AnalysisCacheEntity
@@ -19,7 +20,8 @@ class AnalysisRepositoryImpl @Inject constructor(
     private val claudeApi: ClaudeApi,
     private val analysisCacheDao: AnalysisCacheDao,
     private val settingsDataStore: SettingsDataStore,
-    private val json: Json
+    private val json: Json,
+    private val errorLogManager: ErrorLogManager
 ) : AnalysisRepository {
 
     private val cacheValidityMs = 6 * 60 * 60 * 1000L // 6 hours
@@ -83,6 +85,7 @@ class AnalysisRepositoryImpl @Inject constructor(
 
             Result.success(analysis)
         } catch (e: Exception) {
+            errorLogManager.logError("AnalysisRepository", "Failed to get analysis for $symbol", e)
             Result.failure(e)
         }
     }

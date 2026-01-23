@@ -21,6 +21,7 @@ sealed class NavRoutes(val route: String) {
         }
     }
     data object Settings : NavRoutes("settings")
+    data object ErrorLog : NavRoutes("error_log")
 }
 
 sealed class BottomNavItem(
