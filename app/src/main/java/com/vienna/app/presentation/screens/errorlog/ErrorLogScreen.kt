@@ -13,6 +13,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DeleteSweep
 import androidx.compose.material.icons.filled.ExpandLess
@@ -33,6 +34,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -118,6 +121,7 @@ fun ErrorLogScreen(
                 )
             }
             else -> {
+                val clipboardManager = LocalClipboardManager.current
                 LazyColumn(
                     modifier = Modifier.fillMaxSize()
                 ) {
@@ -129,7 +133,17 @@ fun ErrorLogScreen(
                             error = error,
                             isExpanded = uiState.expandedErrorId == error.id,
                             onToggleExpanded = { viewModel.toggleExpanded(error.id) },
-                            onDelete = { viewModel.deleteError(error.id) }
+                            onDelete = { viewModel.deleteError(error.id) },
+                            onCopy = {
+                                val textToCopy = buildString {
+                                    append("Error: ${error.message}")
+                                    error.stackTrace?.let { stackTrace ->
+                                        append("\n\nStack Trace:\n")
+                                        append(stackTrace)
+                                    }
+                                }
+                                clipboardManager.setText(AnnotatedString(textToCopy))
+                            }
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                     }
@@ -144,7 +158,8 @@ private fun ErrorLogItem(
     error: ErrorLogEntity,
     isExpanded: Boolean,
     onToggleExpanded: () -> Unit,
-    onDelete: () -> Unit
+    onDelete: () -> Unit,
+    onCopy: () -> Unit
 ) {
     val dateFormat = remember { SimpleDateFormat("MMM dd, yyyy HH:mm:ss", Locale.getDefault()) }
     val formattedDate = remember(error.timestamp) {
@@ -174,6 +189,13 @@ private fun ErrorLogItem(
                         text = formattedDate,
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                IconButton(onClick = onCopy) {
+                    Icon(
+                        imageVector = Icons.Default.ContentCopy,
+                        contentDescription = "Copy error",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
                 IconButton(onClick = onDelete) {
