@@ -26,21 +26,6 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      - name: Decode debug keystore
-        env:
-          DEBUG_KEYSTORE_BASE64: ${{ secrets.DEBUG_KEYSTORE_BASE64 }}
-        run: |
-          if [ -n "$DEBUG_KEYSTORE_BASE64" ]; then
-            echo "$DEBUG_KEYSTORE_BASE64" | base64 -d > app/debug.keystore
-            echo "Using custom debug keystore from secrets"
-          else
-            echo "No custom keystore found, generating a consistent one"
-            keytool -genkey -v -keystore app/debug.keystore \
-              -storepass android -alias androiddebugkey -keypass android \
-              -keyalg RSA -keysize 2048 -validity 10000 \
-              -dname "CN=Vienna Debug, OU=Vienna, O=Vienna, L=Unknown, ST=Unknown, C=US"
-          fi
-
       - name: Configure debug signing
         run: |
           cat >> app/build.gradle.kts << 'EOF'
@@ -81,16 +66,3 @@ jobs:
           name: vienna-v${{ steps.version.outputs.version_name }}-debug
           path: app/build/outputs/apk/debug/vienna-v${{ steps.version.outputs.version_name }}-debug.apk
           retention-days: 30
-
-      - name: Upload keystore for future builds
-        if: ${{ !env.DEBUG_KEYSTORE_BASE64 }}
-        env:
-          DEBUG_KEYSTORE_BASE64: ${{ secrets.DEBUG_KEYSTORE_BASE64 }}
-        run: |
-          echo "=========================================="
-          echo "IMPORTANT: To enable consistent signing across builds,"
-          echo "add the following as a repository secret named DEBUG_KEYSTORE_BASE64:"
-          echo "=========================================="
-          base64 -w 0 app/debug.keystore
-          echo ""
-          echo "=========================================="
