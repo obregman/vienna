@@ -20,15 +20,11 @@ import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -48,7 +44,6 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ErrorLogScreen(
     onBackClick: () -> Unit,
@@ -80,58 +75,52 @@ fun ErrorLogScreen(
         )
     }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Error Log") },
-                navigationIcon = {
-                    IconButton(onClick = onBackClick) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back"
-                        )
-                    }
-                },
-                actions = {
-                    if (uiState.errors.isNotEmpty()) {
-                        IconButton(onClick = { showClearDialog = true }) {
-                            Icon(
-                                imageVector = Icons.Default.DeleteSweep,
-                                contentDescription = "Clear all errors"
-                            )
-                        }
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimary,
-                    navigationIconContentColor = MaterialTheme.colorScheme.onPrimary,
-                    actionIconContentColor = MaterialTheme.colorScheme.onPrimary
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            IconButton(onClick = onBackClick) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = "Back"
                 )
+            }
+            Text(
+                text = "Error Log",
+                style = MaterialTheme.typography.titleLarge,
+                modifier = Modifier.weight(1f)
             )
+            if (uiState.errors.isNotEmpty()) {
+                IconButton(onClick = { showClearDialog = true }) {
+                    Icon(
+                        imageVector = Icons.Default.DeleteSweep,
+                        contentDescription = "Clear all errors"
+                    )
+                }
+            }
         }
-    ) { paddingValues ->
+
+        Spacer(modifier = Modifier.height(8.dp))
+
         when {
             uiState.isLoading -> {
-                LoadingIndicator(modifier = Modifier.padding(paddingValues))
+                LoadingIndicator()
             }
             uiState.errors.isEmpty() -> {
                 EmptyState(
-                    modifier = Modifier.padding(paddingValues),
                     title = "No Errors",
                     message = "No errors have been logged yet."
                 )
             }
             else -> {
                 LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(paddingValues)
-                        .padding(horizontal = 16.dp)
+                    modifier = Modifier.fillMaxSize()
                 ) {
-                    item {
-                        Spacer(modifier = Modifier.height(8.dp))
-                    }
                     items(
                         items = uiState.errors,
                         key = { it.id }
