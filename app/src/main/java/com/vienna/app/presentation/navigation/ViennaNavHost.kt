@@ -8,6 +8,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.vienna.app.presentation.screens.analysis.AnalysisScreen
+import com.vienna.app.presentation.screens.errorlog.ErrorLogScreen
 import com.vienna.app.presentation.screens.portfolio.PortfolioScreen
 import com.vienna.app.presentation.screens.search.SearchScreen
 import com.vienna.app.presentation.screens.settings.SettingsScreen
@@ -91,7 +92,17 @@ fun ViennaNavHost(
         }
 
         composable(NavRoutes.Settings.route) {
-            SettingsScreen()
+            SettingsScreen(
+                onErrorLogClick = {
+                    navController.navigate(NavRoutes.ErrorLog.route)
+                }
+            )
+        }
+
+        composable(NavRoutes.ErrorLog.route) {
+            ErrorLogScreen(
+                onBackClick = { navController.popBackStack() }
+            )
         }
     }
 }

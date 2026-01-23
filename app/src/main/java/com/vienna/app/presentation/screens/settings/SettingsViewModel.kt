@@ -2,6 +2,7 @@ package com.vienna.app.presentation.screens.settings
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.vienna.app.data.local.ErrorLogManager
 import com.vienna.app.data.local.datastore.SettingsDataStore
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -22,7 +23,8 @@ data class SettingsUiState(
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
-    private val settingsDataStore: SettingsDataStore
+    private val settingsDataStore: SettingsDataStore,
+    private val errorLogManager: ErrorLogManager
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SettingsUiState())
@@ -46,6 +48,7 @@ class SettingsViewModel @Inject constructor(
                     )
                 }
             } catch (e: Exception) {
+                errorLogManager.logError("SettingsViewModel", "Failed to load settings", e)
                 _uiState.update {
                     it.copy(
                         isLoading = false,
@@ -77,6 +80,7 @@ class SettingsViewModel @Inject constructor(
                     )
                 }
             } catch (e: Exception) {
+                errorLogManager.logError("SettingsViewModel", "Failed to save settings", e)
                 _uiState.update {
                     it.copy(
                         isSaving = false,

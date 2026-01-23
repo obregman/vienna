@@ -3,6 +3,7 @@ package com.vienna.app.presentation.screens.stockdetail
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.vienna.app.data.local.ErrorLogManager
 import com.vienna.app.domain.model.Stock
 import com.vienna.app.domain.usecase.GetStockQuoteUseCase
 import com.vienna.app.domain.usecase.ManagePortfolioUseCase
@@ -28,7 +29,8 @@ data class StockDetailUiState(
 class StockDetailViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val getStockQuoteUseCase: GetStockQuoteUseCase,
-    private val managePortfolioUseCase: ManagePortfolioUseCase
+    private val managePortfolioUseCase: ManagePortfolioUseCase,
+    private val errorLogManager: ErrorLogManager
 ) : ViewModel() {
 
     private val symbol: String = savedStateHandle.get<String>("symbol") ?: ""
@@ -62,6 +64,7 @@ class StockDetailViewModel @Inject constructor(
                     }
                 }
                 .onFailure { exception ->
+                    errorLogManager.logError("StockDetailViewModel", "Failed to load stock details for $symbol", exception)
                     _uiState.update {
                         it.copy(
                             isLoading = false,
@@ -96,6 +99,7 @@ class StockDetailViewModel @Inject constructor(
                     )
                 }
             } catch (e: Exception) {
+                errorLogManager.logError("StockDetailViewModel", "Failed to add stock to portfolio", e)
                 _uiState.update { it.copy(error = e.message) }
             }
         }

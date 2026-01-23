@@ -2,6 +2,7 @@ package com.vienna.app.presentation.screens.stocklist
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.vienna.app.data.local.ErrorLogManager
 import com.vienna.app.domain.model.SortOption
 import com.vienna.app.domain.model.Stock
 import com.vienna.app.domain.usecase.GetMarketDataUseCase
@@ -25,7 +26,8 @@ data class StockListUiState(
 @HiltViewModel
 class StockListViewModel @Inject constructor(
     private val getMarketDataUseCase: GetMarketDataUseCase,
-    private val managePortfolioUseCase: ManagePortfolioUseCase
+    private val managePortfolioUseCase: ManagePortfolioUseCase,
+    private val errorLogManager: ErrorLogManager
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(StockListUiState())
@@ -51,6 +53,7 @@ class StockListViewModel @Inject constructor(
                     }
                 }
                 .onFailure { exception ->
+                    errorLogManager.logError("StockListViewModel", "Failed to load stocks", exception)
                     _uiState.update {
                         it.copy(
                             isLoading = false,
@@ -83,6 +86,7 @@ class StockListViewModel @Inject constructor(
                 )
                 onSuccess()
             } catch (e: Exception) {
+                errorLogManager.logError("StockListViewModel", "Failed to add stock to portfolio", e)
                 onError(e.message ?: "Failed to add stock")
             }
         }
