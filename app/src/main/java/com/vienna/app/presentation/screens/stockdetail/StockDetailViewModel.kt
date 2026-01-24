@@ -4,7 +4,10 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vienna.app.data.local.ErrorLogManager
+import com.vienna.app.domain.model.PricePoint
 import com.vienna.app.domain.model.Stock
+import com.vienna.app.domain.model.TimeRange
+import com.vienna.app.domain.usecase.GetPriceHistoryUseCase
 import com.vienna.app.domain.usecase.GetStockQuoteUseCase
 import com.vienna.app.domain.usecase.ManagePortfolioUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -22,13 +25,17 @@ data class StockDetailUiState(
     val isLoading: Boolean = false,
     val error: String? = null,
     val isInPortfolio: Boolean = false,
-    val addedToPortfolio: Boolean = false
+    val addedToPortfolio: Boolean = false,
+    val priceHistory: List<PricePoint> = emptyList(),
+    val selectedTimeRange: TimeRange = TimeRange.MONTH_1,
+    val isChartLoading: Boolean = false
 )
 
 @HiltViewModel
 class StockDetailViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val getStockQuoteUseCase: GetStockQuoteUseCase,
+    private val getPriceHistoryUseCase: GetPriceHistoryUseCase,
     private val managePortfolioUseCase: ManagePortfolioUseCase,
     private val errorLogManager: ErrorLogManager
 ) : ViewModel() {
@@ -47,6 +54,7 @@ class StockDetailViewModel @Inject constructor(
     init {
         loadStockDetails()
         checkPortfolioStatus()
+        loadPriceHistory()
     }
 
     private fun loadStockDetails() {
@@ -108,9 +116,37 @@ class StockDetailViewModel @Inject constructor(
     fun refresh() {
         loadStockDetails()
         checkPortfolioStatus()
+        loadPriceHistory()
     }
 
     fun clearAddedFlag() {
         _uiState.update { it.copy(addedToPortfolio = false) }
+    }
+
+    private fun loadPriceHistory() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isChartLoading = true) }
+
+            getPriceHistoryUseCase(symbol, _uiState.value.selectedTimeRange)
+                .onSuccess { history ->
+                    _uiState.update {
+                        it.copy(
+                            priceHistory = history.prices,
+                            isChartLoading = false
+                        )
+                    }
+                }
+                .onFailure { exception ->
+                    errorLogManager.logError("StockDetailViewModel", "Failed to load price history", exception)
+                    _uiState.update {
+                        it.copy(isChartLoading = false)
+                    }
+                }
+        }
+    }
+
+    fun setTimeRange(timeRange: TimeRange) {
+        _uiState.update { it.copy(selectedTimeRange = timeRange) }
+        loadPriceHistory()
     }
 }

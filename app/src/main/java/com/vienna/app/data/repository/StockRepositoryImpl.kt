@@ -7,16 +7,23 @@ import com.vienna.app.data.local.datastore.SettingsDataStore
 import com.vienna.app.data.local.database.entity.CachedStockEntity
 import com.vienna.app.data.local.database.entity.SearchHistoryEntity
 import com.vienna.app.data.remote.api.StockApi
+import com.vienna.app.data.remote.dto.DailyPriceDto
 import com.vienna.app.data.remote.dto.GlobalQuoteDto
 import com.vienna.app.data.remote.dto.MarketMoverDto
 import com.vienna.app.domain.model.MarketData
+import com.vienna.app.domain.model.PriceHistory
+import com.vienna.app.domain.model.PricePoint
 import com.vienna.app.domain.model.SearchResult
 import com.vienna.app.domain.model.Stock
+import com.vienna.app.domain.model.TimeRange
 import com.vienna.app.domain.repository.StockRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import java.text.SimpleDateFormat
+import java.util.Locale
 import javax.inject.Inject
 
 class StockRepositoryImpl @Inject constructor(
@@ -143,6 +150,107 @@ class StockRepositoryImpl @Inject constructor(
     override suspend fun clearSearchHistory() {
         searchHistoryDao.clearAll()
     }
+
+    override suspend fun getPriceHistory(symbol: String, timeRange: TimeRange): Result<PriceHistory> {
+        return try {
+            val cacheKey = "${symbol}_history"
+            val now = System.currentTimeMillis()
+            val oneDayMs = 24 * 60 * 60 * 1000L
+
+            // Check cache - history data is valid for 1 day
+            val cached = cachedStockDao.getCachedStock(cacheKey)
+            if (cached != null && (now - cached.cachedAt) < oneDayMs) {
+                val cachedData = json.decodeFromString<CachedPriceHistory>(cached.dataJson)
+                val filteredPrices = filterByTimeRange(cachedData.prices, timeRange)
+                return Result.success(
+                    PriceHistory(
+                        symbol = symbol,
+                        prices = filteredPrices,
+                        timeRange = timeRange
+                    )
+                )
+            }
+
+            val apiKey = settingsDataStore.getAlphaVantageApiKey()
+            if (apiKey.isBlank()) {
+                return Result.failure(Exception("Please configure your Alpha Vantage API key in Settings"))
+            }
+
+            // Fetch daily history (compact = last 100 data points)
+            val response = stockApi.getTimeSeriesDaily(
+                symbol = symbol,
+                outputSize = "compact",
+                apiKey = apiKey
+            )
+
+            val timeSeries = response.timeSeries
+                ?: return Result.failure(Exception("No price history available"))
+
+            val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.US)
+            val allPrices = timeSeries.entries
+                .mapNotNull { (dateStr, priceData) ->
+                    try {
+                        val date = dateFormat.parse(dateStr)
+                        PricePoint(
+                            timestamp = date?.time ?: 0L,
+                            price = priceData.close.toDoubleOrNull() ?: 0.0,
+                            volume = priceData.volume.toLongOrNull() ?: 0L
+                        )
+                    } catch (e: Exception) {
+                        null
+                    }
+                }
+                .sortedBy { it.timestamp }
+
+            // Cache the full history
+            val cachedPriceHistory = CachedPriceHistory(
+                prices = allPrices.map { CachedPricePoint(it.timestamp, it.price, it.volume) }
+            )
+            cachedStockDao.insertCachedStock(
+                CachedStockEntity(
+                    symbol = cacheKey,
+                    dataJson = json.encodeToString(cachedPriceHistory),
+                    cachedAt = now
+                )
+            )
+
+            val filteredPrices = filterByTimeRange(cachedPriceHistory.prices, timeRange)
+            Result.success(
+                PriceHistory(
+                    symbol = symbol,
+                    prices = filteredPrices,
+                    timeRange = timeRange
+                )
+            )
+        } catch (e: Exception) {
+            errorLogManager.logError("StockRepository", "Failed to get price history for $symbol", e)
+            Result.failure(e)
+        }
+    }
+
+    private fun filterByTimeRange(prices: List<CachedPricePoint>, timeRange: TimeRange): List<PricePoint> {
+        val now = System.currentTimeMillis()
+        val cutoff = if (timeRange.days > 0) {
+            now - (timeRange.days * 24 * 60 * 60 * 1000L)
+        } else {
+            0L // All time
+        }
+        return prices
+            .filter { it.timestamp >= cutoff }
+            .map { PricePoint(it.timestamp, it.price, it.volume) }
+    }
+
+    @Serializable
+    private data class CachedPriceHistory(
+        val prices: List<CachedPricePoint>
+    )
+
+    @Serializable
+    private data class CachedPricePoint(
+        val timestamp: Long,
+        val price: Double,
+        val volume: Long
+    )
 
     private fun MarketMoverDto.toStock(): Stock {
         return Stock(

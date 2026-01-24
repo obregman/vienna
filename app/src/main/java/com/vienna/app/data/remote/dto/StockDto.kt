@@ -110,3 +110,43 @@ data class CompanyOverviewResponse(
     @SerialName("52WeekLow")
     val week52Low: String = "0"
 )
+
+@Serializable
+data class TimeSeriesDailyResponse(
+    @SerialName("Meta Data")
+    val metaData: TimeSeriesMetaData? = null,
+    @SerialName("Time Series (Daily)")
+    val timeSeries: Map<String, DailyPriceDto>? = null
+)
+
+@Serializable
+data class TimeSeriesIntradayResponse(
+    @SerialName("Meta Data")
+    val metaData: TimeSeriesMetaData? = null,
+    @SerialName("Time Series (5min)")
+    val timeSeries: Map<String, DailyPriceDto>? = null
+)
+
+@Serializable
+data class TimeSeriesMetaData(
+    @SerialName("1. Information")
+    val information: String = "",
+    @SerialName("2. Symbol")
+    val symbol: String = "",
+    @SerialName("3. Last Refreshed")
+    val lastRefreshed: String = ""
+)
+
+@Serializable
+data class DailyPriceDto(
+    @SerialName("1. open")
+    val open: String = "0",
+    @SerialName("2. high")
+    val high: String = "0",
+    @SerialName("3. low")
+    val low: String = "0",
+    @SerialName("4. close")
+    val close: String = "0",
+    @SerialName("5. volume")
+    val volume: String = "0"
+)

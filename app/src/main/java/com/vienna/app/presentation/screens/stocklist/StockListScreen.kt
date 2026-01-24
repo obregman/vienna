@@ -51,10 +51,9 @@ fun StockListScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Vienna") },
+                title = { },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimary
+                    containerColor = MaterialTheme.colorScheme.primary
                 ),
                 actions = {
                     IconButton(onClick = onSearchClick) {
@@ -64,7 +63,8 @@ fun StockListScreen(
                             tint = MaterialTheme.colorScheme.onPrimary
                         )
                     }
-                }
+                },
+                expandedHeight = 48.dp
             )
         },
         floatingActionButton = {

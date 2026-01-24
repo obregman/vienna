@@ -45,6 +45,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.vienna.app.presentation.components.ErrorState
 import com.vienna.app.presentation.components.LoadingIndicator
 import com.vienna.app.presentation.components.PriceChangeBadge
+import com.vienna.app.presentation.components.StockChartWithSelector
 import com.vienna.app.presentation.components.formatPrice
 import com.vienna.app.presentation.components.formatVolume
 import com.vienna.app.presentation.theme.Success
@@ -142,7 +143,18 @@ fun StockDetailScreen(
                         )
                     }
 
-                    Spacer(modifier = Modifier.height(24.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // Price Chart
+                    StockChartWithSelector(
+                        prices = uiState.priceHistory,
+                        selectedRange = uiState.selectedTimeRange,
+                        onRangeSelected = viewModel::setTimeRange,
+                        isLoading = uiState.isChartLoading,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
 
                     // Key Metrics
                     Card(

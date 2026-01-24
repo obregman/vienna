@@ -51,6 +51,8 @@ class AnalysisRepositoryImpl @Inject constructor(
 
             val prompt = buildAnalysisPrompt(symbol, companyName)
             val request = ClaudeRequest(
+                model = "claude-sonnet-4-20250514",
+                maxTokens = 1024,
                 messages = listOf(
                     ClaudeMessage(role = "user", content = prompt)
                 )
