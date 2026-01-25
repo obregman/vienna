@@ -83,7 +83,12 @@ class StockRepositoryImpl @Inject constructor(
             }
 
             val response = stockApi.getGlobalQuote(symbol = symbol, apiKey = apiKey)
-            val quote = response.globalQuote ?: return Result.failure(Exception("Stock not found"))
+            val quote = response.globalQuote
+
+            // Alpha Vantage returns an empty GlobalQuote object (not null) when stock is not found
+            if (quote == null || quote.symbol.isBlank()) {
+                return Result.failure(Exception("Stock '$symbol' not found. Please verify the symbol is correct."))
+            }
 
             // Cache the result
             cachedStockDao.insertCachedStock(
