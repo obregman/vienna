@@ -18,6 +18,10 @@ class PortfolioRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun getHoldingById(id: Long): PortfolioHolding? {
+        return portfolioDao.getHoldingById(id)?.toDomain()
+    }
+
     override suspend fun getHoldingsBySymbol(symbol: String): List<PortfolioHolding> {
         return portfolioDao.getHoldingsBySymbol(symbol).map { it.toDomain() }
     }

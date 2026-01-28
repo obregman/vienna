@@ -5,6 +5,7 @@ import kotlinx.coroutines.flow.Flow
 
 interface PortfolioRepository {
     fun getAllHoldings(): Flow<List<PortfolioHolding>>
+    suspend fun getHoldingById(id: Long): PortfolioHolding?
     suspend fun getHoldingsBySymbol(symbol: String): List<PortfolioHolding>
     suspend fun addHolding(symbol: String, companyName: String, price: Double): Long
     suspend fun removeHolding(id: Long)
