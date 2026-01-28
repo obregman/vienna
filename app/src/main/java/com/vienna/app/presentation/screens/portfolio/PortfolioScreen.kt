@@ -17,6 +17,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.ShowChart
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -56,6 +57,7 @@ import java.util.Locale
 @Composable
 fun PortfolioScreen(
     onStockClick: (symbol: String, name: String) -> Unit,
+    onHoldingClick: (holdingId: Long) -> Unit,
     onSearchClick: () -> Unit,
     viewModel: PortfolioViewModel = hiltViewModel()
 ) {
@@ -124,7 +126,8 @@ fun PortfolioScreen(
                             SwipeToDeleteHoldingCard(
                                 holding = holding,
                                 onClick = { onStockClick(holding.symbol, holding.companyName) },
-                                onDelete = { viewModel.removeHolding(holding) }
+                                onDelete = { viewModel.removeHolding(holding) },
+                                onInfoClick = { onHoldingClick(holding.id) }
                             )
                         }
                     }
@@ -194,7 +197,8 @@ private fun PortfolioSummaryCard(
 private fun SwipeToDeleteHoldingCard(
     holding: PortfolioHolding,
     onClick: () -> Unit,
-    onDelete: () -> Unit
+    onDelete: () -> Unit,
+    onInfoClick: () -> Unit
 ) {
     val dismissState = rememberSwipeToDismissBoxState(
         confirmValueChange = { value ->
@@ -229,7 +233,8 @@ private fun SwipeToDeleteHoldingCard(
         HoldingCard(
             holding = holding,
             onClick = onClick,
-            onDelete = onDelete
+            onDelete = onDelete,
+            onInfoClick = onInfoClick
         )
     }
 }
@@ -238,7 +243,8 @@ private fun SwipeToDeleteHoldingCard(
 private fun HoldingCard(
     holding: PortfolioHolding,
     onClick: () -> Unit,
-    onDelete: () -> Unit
+    onDelete: () -> Unit,
+    onInfoClick: () -> Unit
 ) {
     val isPositive = holding.isPositive
     val color = if (isPositive) Success else Error
@@ -298,6 +304,14 @@ private fun HoldingCard(
                         color = color
                     )
                 }
+            }
+
+            IconButton(onClick = onInfoClick) {
+                Icon(
+                    imageVector = Icons.Default.Info,
+                    contentDescription = "Performance Details",
+                    tint = MaterialTheme.colorScheme.primary
+                )
             }
 
             IconButton(onClick = onDelete) {

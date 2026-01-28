@@ -20,6 +20,11 @@ sealed class NavRoutes(val route: String) {
             return "analysis/$symbol/$encodedName"
         }
     }
+    data object HoldingDetail : NavRoutes("holding_detail/{holdingId}") {
+        fun createRoute(holdingId: Long): String {
+            return "holding_detail/$holdingId"
+        }
+    }
     data object Settings : NavRoutes("settings")
     data object ErrorLog : NavRoutes("error_log")
 }

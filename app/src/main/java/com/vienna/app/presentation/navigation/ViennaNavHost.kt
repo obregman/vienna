@@ -9,6 +9,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.vienna.app.presentation.screens.analysis.AnalysisScreen
 import com.vienna.app.presentation.screens.errorlog.ErrorLogScreen
+import com.vienna.app.presentation.screens.holdingdetail.HoldingDetailScreen
 import com.vienna.app.presentation.screens.portfolio.PortfolioScreen
 import com.vienna.app.presentation.screens.search.SearchScreen
 import com.vienna.app.presentation.screens.settings.SettingsScreen
@@ -54,9 +55,23 @@ fun ViennaNavHost(
                 onStockClick = { symbol, name ->
                     navController.navigate(NavRoutes.StockDetail.createRoute(symbol, name))
                 },
+                onHoldingClick = { holdingId ->
+                    navController.navigate(NavRoutes.HoldingDetail.createRoute(holdingId))
+                },
                 onSearchClick = {
                     navController.navigate(NavRoutes.Search.route)
                 }
+            )
+        }
+
+        composable(
+            route = NavRoutes.HoldingDetail.route,
+            arguments = listOf(
+                navArgument("holdingId") { type = NavType.LongType }
+            )
+        ) {
+            HoldingDetailScreen(
+                onBackClick = { navController.popBackStack() }
             )
         }
 
