@@ -22,7 +22,7 @@ data class StockDetailUiState(
     val symbol: String = "",
     val companyName: String = "",
     val stock: Stock? = null,
-    val isLoading: Boolean = false,
+    val isLoading: Boolean = true,
     val error: String? = null,
     val isInPortfolio: Boolean = false,
     val addedToPortfolio: Boolean = false,
