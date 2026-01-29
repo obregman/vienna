@@ -3,6 +3,7 @@ package com.vienna.app.presentation.screens.portfolio
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -111,14 +112,6 @@ fun PortfolioScreen(
                         contentPadding = PaddingValues(16.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        item {
-                            PortfolioSummaryCard(
-                                totalValue = uiState.totalValue,
-                                totalGainLoss = uiState.totalGainLoss,
-                                totalGainLossPercent = uiState.totalGainLossPercent
-                            )
-                        }
-
                         items(
                             items = uiState.holdings,
                             key = { it.id }
@@ -132,61 +125,6 @@ fun PortfolioScreen(
                         }
                     }
                 }
-            }
-        }
-    }
-}
-
-@Composable
-private fun PortfolioSummaryCard(
-    totalValue: Double,
-    totalGainLoss: Double,
-    totalGainLossPercent: Double
-) {
-    val isPositive = totalGainLoss >= 0
-    val color = if (isPositive) Success else Error
-    val sign = if (isPositive) "+" else ""
-
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.primaryContainer
-        )
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(20.dp)
-        ) {
-            Text(
-                text = "Total Value",
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
-            )
-            Text(
-                text = formatPrice(totalValue),
-                style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onPrimaryContainer
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Row(
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "$sign${formatPrice(totalGainLoss)}",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = color,
-                    fontWeight = FontWeight.Medium
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = "($sign${String.format(Locale.US, "%.2f", totalGainLossPercent)}%)",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = color
-                )
             }
         }
     }
@@ -217,7 +155,10 @@ private fun SwipeToDeleteHoldingCard(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(Error)
+                    .background(
+                        color = Error,
+                        shape = RoundedCornerShape(12.dp)
+                    )
                     .padding(horizontal = 20.dp),
                 contentAlignment = Alignment.CenterEnd
             ) {
