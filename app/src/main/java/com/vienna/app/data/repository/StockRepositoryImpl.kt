@@ -195,24 +195,39 @@ class StockRepositoryImpl @Inject constructor(
 
                 // Check for rate limiting response
                 if (response.note != null || response.information != null) {
+                    val rateLimitMessage = response.note ?: response.information
+                    errorLogManager.logError(
+                        "StockRepository",
+                        "API rate limit for $symbol (attempt ${attempt + 1}/$maxRetries): $rateLimitMessage",
+                        null
+                    )
                     if (attempt < maxRetries - 1) {
                         // Wait with exponential backoff before retry
                         val delayMs = (attempt + 1) * 2000L // 2s, 4s, 6s
                         delay(delayMs)
                         continue
                     } else {
+                        val error = Exception("API rate limit reached after $maxRetries attempts. Message: $rateLimitMessage")
+                        errorLogManager.logError("StockRepository", "Price history failed for $symbol", error)
                         return Result.failure(Exception("API rate limit reached. Please try again in a moment."))
                     }
                 }
 
                 val timeSeries = response.timeSeries
                 if (timeSeries == null) {
+                    errorLogManager.logError(
+                        "StockRepository",
+                        "Empty timeSeries response for $symbol (attempt ${attempt + 1}/$maxRetries). MetaData: ${response.metaData}",
+                        null
+                    )
                     if (attempt < maxRetries - 1) {
                         // Retry if no data returned
                         val delayMs = (attempt + 1) * 2000L
                         delay(delayMs)
                         continue
                     } else {
+                        val error = Exception("No price history data returned after $maxRetries attempts")
+                        errorLogManager.logError("StockRepository", "Price history failed for $symbol", error)
                         return Result.failure(Exception("No price history available"))
                     }
                 }
