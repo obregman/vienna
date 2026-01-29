@@ -88,3 +88,4 @@ Thumbs.db
 # Secrets
 *.env
 secrets.properties
+keystore.properties
