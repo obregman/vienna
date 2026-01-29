@@ -2,7 +2,7 @@ package com.vienna.app.di
 
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
 import com.vienna.app.data.remote.api.ClaudeApi
-import com.vienna.app.data.remote.api.StockApi
+import com.vienna.app.data.remote.api.FinnhubApi
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -44,10 +44,10 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    @Named("stockRetrofit")
-    fun provideStockRetrofit(okHttpClient: OkHttpClient, json: Json): Retrofit {
+    @Named("finnhubRetrofit")
+    fun provideFinnhubRetrofit(okHttpClient: OkHttpClient, json: Json): Retrofit {
         return Retrofit.Builder()
-            .baseUrl(StockApi.BASE_URL)
+            .baseUrl(FinnhubApi.BASE_URL)
             .client(okHttpClient)
             .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
             .build()
@@ -66,8 +66,8 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideStockApi(@Named("stockRetrofit") retrofit: Retrofit): StockApi {
-        return retrofit.create(StockApi::class.java)
+    fun provideFinnhubApi(@Named("finnhubRetrofit") retrofit: Retrofit): FinnhubApi {
+        return retrofit.create(FinnhubApi::class.java)
     }
 
     @Provides

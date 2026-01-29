@@ -13,7 +13,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 data class SettingsUiState(
-    val alphaVantageApiKey: String = "",
+    val finnhubApiKey: String = "",
     val claudeApiKey: String = "",
     val isLoading: Boolean = true,
     val isSaving: Boolean = false,
@@ -38,11 +38,11 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
             try {
-                val alphaVantageKey = settingsDataStore.getAlphaVantageApiKey()
+                val finnhubKey = settingsDataStore.getFinnhubApiKey()
                 val claudeKey = settingsDataStore.getClaudeApiKey()
                 _uiState.update {
                     it.copy(
-                        alphaVantageApiKey = alphaVantageKey,
+                        finnhubApiKey = finnhubKey,
                         claudeApiKey = claudeKey,
                         isLoading = false
                     )
@@ -59,8 +59,8 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
-    fun onAlphaVantageApiKeyChanged(key: String) {
-        _uiState.update { it.copy(alphaVantageApiKey = key, saveSuccess = false) }
+    fun onFinnhubApiKeyChanged(key: String) {
+        _uiState.update { it.copy(finnhubApiKey = key, saveSuccess = false) }
     }
 
     fun onClaudeApiKeyChanged(key: String) {
@@ -71,7 +71,7 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isSaving = true, error = null) }
             try {
-                settingsDataStore.setAlphaVantageApiKey(_uiState.value.alphaVantageApiKey.trim())
+                settingsDataStore.setFinnhubApiKey(_uiState.value.finnhubApiKey.trim())
                 settingsDataStore.setClaudeApiKey(_uiState.value.claudeApiKey.trim())
                 _uiState.update {
                     it.copy(

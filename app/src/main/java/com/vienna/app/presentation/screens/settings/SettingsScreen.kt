@@ -109,13 +109,13 @@ fun SettingsScreen(
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                // Alpha Vantage API Key
+                // Finnhub API Key
                 ApiKeyCard(
-                    title = "Alpha Vantage API Key",
-                    description = "Required for stock market data. Get a free key at alphavantage.co",
-                    value = uiState.alphaVantageApiKey,
-                    onValueChange = viewModel::onAlphaVantageApiKeyChanged,
-                    placeholder = "Enter your Alpha Vantage API key"
+                    title = "Finnhub API Key",
+                    description = "Required for stock market data. Get a free key at finnhub.io (60 calls/min)",
+                    value = uiState.finnhubApiKey,
+                    onValueChange = viewModel::onFinnhubApiKeyChanged,
+                    placeholder = "Enter your Finnhub API key"
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -165,7 +165,7 @@ fun SettingsScreen(
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = "Your API keys are stored securely on your device and are never shared. Stock data requires an Alpha Vantage key, and AI analysis requires a Claude API key.",
+                            text = "Your API keys are stored securely on your device and are never shared. Stock data requires a Finnhub key, and AI analysis requires a Claude API key.",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSecondaryContainer
                         )

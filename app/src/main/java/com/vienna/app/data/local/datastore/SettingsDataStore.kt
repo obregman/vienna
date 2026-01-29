@@ -20,13 +20,13 @@ class SettingsDataStore @Inject constructor(
     @ApplicationContext private val context: Context
 ) {
     private object PreferencesKeys {
-        val ALPHA_VANTAGE_API_KEY = stringPreferencesKey("alpha_vantage_api_key")
+        val FINNHUB_API_KEY = stringPreferencesKey("finnhub_api_key")
         val CLAUDE_API_KEY = stringPreferencesKey("claude_api_key")
     }
 
-    val alphaVantageApiKey: Flow<String> = context.dataStore.data
+    val finnhubApiKey: Flow<String> = context.dataStore.data
         .map { preferences ->
-            preferences[PreferencesKeys.ALPHA_VANTAGE_API_KEY] ?: ""
+            preferences[PreferencesKeys.FINNHUB_API_KEY] ?: ""
         }
 
     val claudeApiKey: Flow<String> = context.dataStore.data
@@ -34,17 +34,17 @@ class SettingsDataStore @Inject constructor(
             preferences[PreferencesKeys.CLAUDE_API_KEY] ?: ""
         }
 
-    suspend fun getAlphaVantageApiKey(): String {
-        return context.dataStore.data.first()[PreferencesKeys.ALPHA_VANTAGE_API_KEY] ?: ""
+    suspend fun getFinnhubApiKey(): String {
+        return context.dataStore.data.first()[PreferencesKeys.FINNHUB_API_KEY] ?: ""
     }
 
     suspend fun getClaudeApiKey(): String {
         return context.dataStore.data.first()[PreferencesKeys.CLAUDE_API_KEY] ?: ""
     }
 
-    suspend fun setAlphaVantageApiKey(apiKey: String) {
+    suspend fun setFinnhubApiKey(apiKey: String) {
         context.dataStore.edit { preferences ->
-            preferences[PreferencesKeys.ALPHA_VANTAGE_API_KEY] = apiKey
+            preferences[PreferencesKeys.FINNHUB_API_KEY] = apiKey
         }
     }
 
@@ -56,9 +56,9 @@ class SettingsDataStore @Inject constructor(
 
     suspend fun hasApiKeys(): Boolean {
         val data = context.dataStore.data.first()
-        val alphaVantageKey = data[PreferencesKeys.ALPHA_VANTAGE_API_KEY] ?: ""
+        val finnhubKey = data[PreferencesKeys.FINNHUB_API_KEY] ?: ""
         val claudeKey = data[PreferencesKeys.CLAUDE_API_KEY] ?: ""
-        return alphaVantageKey.isNotBlank() && claudeKey.isNotBlank()
+        return finnhubKey.isNotBlank() && claudeKey.isNotBlank()
     }
 
     suspend fun clearAll() {
