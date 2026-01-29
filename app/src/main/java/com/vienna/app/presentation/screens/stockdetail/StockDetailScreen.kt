@@ -49,7 +49,11 @@ import com.vienna.app.presentation.components.StockChartWithSelector
 import com.vienna.app.presentation.components.VolumeChartSection
 import com.vienna.app.presentation.components.formatPrice
 import com.vienna.app.presentation.components.formatVolume
+import com.vienna.app.presentation.theme.Error
 import com.vienna.app.presentation.theme.Success
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -202,6 +206,17 @@ fun StockDetailScreen(
                         }
                     }
 
+                    // Portfolio Info (if in portfolio)
+                    if (uiState.isInPortfolio && uiState.purchaseDate != null && uiState.purchasePrice != null) {
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        PortfolioHoldingInfoCard(
+                            purchaseDate = uiState.purchaseDate,
+                            purchasePrice = uiState.purchasePrice,
+                            currentPrice = stock.currentPrice
+                        )
+                    }
+
                     Spacer(modifier = Modifier.height(24.dp))
 
                     // Action Buttons
@@ -278,5 +293,111 @@ private fun MetricRow(
             style = MaterialTheme.typography.bodyMedium,
             fontWeight = FontWeight.Medium
         )
+    }
+}
+
+@Composable
+private fun PortfolioHoldingInfoCard(
+    purchaseDate: Long,
+    purchasePrice: Double,
+    currentPrice: Double
+) {
+    val dateFormat = SimpleDateFormat("MMM d, yyyy", Locale.US)
+    val formattedDate = dateFormat.format(Date(purchaseDate))
+
+    val priceDelta = currentPrice - purchasePrice
+    val percentDelta = (priceDelta / purchasePrice) * 100
+    val isPositive = priceDelta >= 0
+    val deltaColor = if (isPositive) Success else Error
+    val sign = if (isPositive) "+" else ""
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = if (isPositive) {
+                Success.copy(alpha = 0.1f)
+            } else {
+                Error.copy(alpha = 0.1f)
+            }
+        )
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp)
+        ) {
+            Text(
+                text = "Portfolio Position",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 4.dp),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = "Added to Portfolio",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Text(
+                    text = formattedDate,
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Medium
+                )
+            }
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 4.dp),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = "Purchase Price",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Text(
+                    text = formatPrice(purchasePrice),
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Medium
+                )
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 4.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Since Purchase",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Column(
+                    horizontalAlignment = Alignment.End
+                ) {
+                    Text(
+                        text = "$sign${formatPrice(priceDelta)}",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = deltaColor
+                    )
+                    Text(
+                        text = "($sign${String.format(Locale.US, "%.2f", percentDelta)}%)",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = deltaColor
+                    )
+                }
+            }
+        }
     }
 }

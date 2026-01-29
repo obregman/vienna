@@ -28,7 +28,9 @@ data class StockDetailUiState(
     val addedToPortfolio: Boolean = false,
     val priceHistory: List<PricePoint> = emptyList(),
     val selectedTimeRange: TimeRange = TimeRange.MONTH_1,
-    val isChartLoading: Boolean = false
+    val isChartLoading: Boolean = false,
+    val purchaseDate: Long? = null,
+    val purchasePrice: Double? = null
 )
 
 @HiltViewModel
@@ -85,8 +87,14 @@ class StockDetailViewModel @Inject constructor(
 
     private fun checkPortfolioStatus() {
         viewModelScope.launch {
-            val isInPortfolio = managePortfolioUseCase.isInPortfolio(symbol)
-            _uiState.update { it.copy(isInPortfolio = isInPortfolio) }
+            val holding = managePortfolioUseCase.getHoldingBySymbol(symbol)
+            _uiState.update {
+                it.copy(
+                    isInPortfolio = holding != null,
+                    purchaseDate = holding?.purchaseDate,
+                    purchasePrice = holding?.purchasePrice
+                )
+            }
         }
     }
 
