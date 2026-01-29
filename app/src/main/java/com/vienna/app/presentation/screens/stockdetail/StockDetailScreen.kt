@@ -207,12 +207,14 @@ fun StockDetailScreen(
                     }
 
                     // Portfolio Info (if in portfolio)
-                    if (uiState.isInPortfolio && uiState.purchaseDate != null && uiState.purchasePrice != null) {
+                    val purchaseDate = uiState.purchaseDate
+                    val purchasePrice = uiState.purchasePrice
+                    if (uiState.isInPortfolio && purchaseDate != null && purchasePrice != null) {
                         Spacer(modifier = Modifier.height(16.dp))
 
                         PortfolioHoldingInfoCard(
-                            purchaseDate = uiState.purchaseDate,
-                            purchasePrice = uiState.purchasePrice,
+                            purchaseDate = purchaseDate,
+                            purchasePrice = purchasePrice,
                             currentPrice = stock.currentPrice
                         )
                     }
