@@ -17,6 +17,7 @@ import com.vienna.app.domain.model.SearchResult
 import com.vienna.app.domain.model.Stock
 import com.vienna.app.domain.model.TimeRange
 import com.vienna.app.domain.repository.StockRepository
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.serialization.Serializable
@@ -181,52 +182,95 @@ class StockRepositoryImpl @Inject constructor(
                 return Result.failure(Exception("Please configure your Alpha Vantage API key in Settings"))
             }
 
-            // Fetch daily history (compact = last 100 data points)
-            val response = stockApi.getTimeSeriesDaily(
-                symbol = symbol,
-                outputSize = "compact",
-                apiKey = apiKey
-            )
+            // Fetch daily history with retry logic for rate limiting
+            val maxRetries = 3
+            var lastException: Exception? = null
 
-            val timeSeries = response.timeSeries
-                ?: return Result.failure(Exception("No price history available"))
+            for (attempt in 0 until maxRetries) {
+                val response = stockApi.getTimeSeriesDaily(
+                    symbol = symbol,
+                    outputSize = "compact",
+                    apiKey = apiKey
+                )
 
-            val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.US)
-            val allPrices = timeSeries.entries
-                .mapNotNull { (dateStr, priceData) ->
-                    try {
-                        val date = dateFormat.parse(dateStr)
-                        PricePoint(
-                            timestamp = date?.time ?: 0L,
-                            price = priceData.close.toDoubleOrNull() ?: 0.0,
-                            volume = priceData.volume.toLongOrNull() ?: 0L
-                        )
-                    } catch (e: Exception) {
+                // Check for rate limiting response
+                if (response.note != null || response.information != null) {
+                    val rateLimitMessage = response.note ?: response.information
+                    errorLogManager.logError(
+                        "StockRepository",
+                        "API rate limit for $symbol (attempt ${attempt + 1}/$maxRetries): $rateLimitMessage",
                         null
+                    )
+                    if (attempt < maxRetries - 1) {
+                        // Wait with exponential backoff before retry
+                        val delayMs = (attempt + 1) * 2000L // 2s, 4s, 6s
+                        delay(delayMs)
+                        continue
+                    } else {
+                        val error = Exception("API rate limit reached after $maxRetries attempts. Message: $rateLimitMessage")
+                        errorLogManager.logError("StockRepository", "Price history failed for $symbol", error)
+                        return Result.failure(Exception("API rate limit reached. Please try again in a moment."))
                     }
                 }
-                .sortedBy { it.timestamp }
 
-            // Cache the full history
-            val cachedPriceHistory = CachedPriceHistory(
-                prices = allPrices.map { CachedPricePoint(it.timestamp, it.price, it.volume) }
-            )
-            cachedStockDao.insertCachedStock(
-                CachedStockEntity(
-                    symbol = cacheKey,
-                    dataJson = json.encodeToString(cachedPriceHistory),
-                    cachedAt = now
-                )
-            )
+                val timeSeries = response.timeSeries
+                if (timeSeries == null) {
+                    errorLogManager.logError(
+                        "StockRepository",
+                        "Empty timeSeries response for $symbol (attempt ${attempt + 1}/$maxRetries). MetaData: ${response.metaData}",
+                        null
+                    )
+                    if (attempt < maxRetries - 1) {
+                        // Retry if no data returned
+                        val delayMs = (attempt + 1) * 2000L
+                        delay(delayMs)
+                        continue
+                    } else {
+                        val error = Exception("No price history data returned after $maxRetries attempts")
+                        errorLogManager.logError("StockRepository", "Price history failed for $symbol", error)
+                        return Result.failure(Exception("No price history available"))
+                    }
+                }
 
-            val filteredPrices = filterByTimeRange(cachedPriceHistory.prices, timeRange)
-            Result.success(
-                PriceHistory(
-                    symbol = symbol,
-                    prices = filteredPrices,
-                    timeRange = timeRange
+                val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.US)
+                val allPrices = timeSeries.entries
+                    .mapNotNull { (dateStr, priceData) ->
+                        try {
+                            val date = dateFormat.parse(dateStr)
+                            PricePoint(
+                                timestamp = date?.time ?: 0L,
+                                price = priceData.close.toDoubleOrNull() ?: 0.0,
+                                volume = priceData.volume.toLongOrNull() ?: 0L
+                            )
+                        } catch (e: Exception) {
+                            null
+                        }
+                    }
+                    .sortedBy { it.timestamp }
+
+                // Cache the full history
+                val cachedPriceHistory = CachedPriceHistory(
+                    prices = allPrices.map { CachedPricePoint(it.timestamp, it.price, it.volume) }
                 )
-            )
+                cachedStockDao.insertCachedStock(
+                    CachedStockEntity(
+                        symbol = cacheKey,
+                        dataJson = json.encodeToString(cachedPriceHistory),
+                        cachedAt = now
+                    )
+                )
+
+                val filteredPrices = filterByTimeRange(cachedPriceHistory.prices, timeRange)
+                return Result.success(
+                    PriceHistory(
+                        symbol = symbol,
+                        prices = filteredPrices,
+                        timeRange = timeRange
+                    )
+                )
+            }
+
+            Result.failure(lastException ?: Exception("Failed to load price history after retries"))
         } catch (e: Exception) {
             errorLogManager.logError("StockRepository", "Failed to get price history for $symbol", e)
             Result.failure(e)

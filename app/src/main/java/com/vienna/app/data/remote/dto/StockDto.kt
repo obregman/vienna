@@ -116,7 +116,11 @@ data class TimeSeriesDailyResponse(
     @SerialName("Meta Data")
     val metaData: TimeSeriesMetaData? = null,
     @SerialName("Time Series (Daily)")
-    val timeSeries: Map<String, DailyPriceDto>? = null
+    val timeSeries: Map<String, DailyPriceDto>? = null,
+    @SerialName("Note")
+    val note: String? = null,
+    @SerialName("Information")
+    val information: String? = null
 )
 
 @Serializable
