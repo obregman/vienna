@@ -31,10 +31,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vienna.app.domain.model.Stock
+import com.vienna.app.presentation.components.AlgorithmChips
+import com.vienna.app.presentation.components.EmptyState
 import com.vienna.app.presentation.components.ErrorState
 import com.vienna.app.presentation.components.LoadingIndicator
-import com.vienna.app.presentation.components.SortChips
-import com.vienna.app.presentation.components.StockCard
+import com.vienna.app.presentation.components.PredictionCard
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -51,9 +52,10 @@ fun StockListScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { },
+                title = { Text("Predictions") },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primary
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    titleContentColor = MaterialTheme.colorScheme.onPrimary
                 ),
                 actions = {
                     IconButton(onClick = onSearchClick) {
@@ -85,20 +87,29 @@ fun StockListScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-            SortChips(
-                selectedOption = uiState.sortOption,
-                onOptionSelected = viewModel::setSortOption
-            )
+            // Algorithm selection chips
+            if (uiState.algorithms.isNotEmpty()) {
+                AlgorithmChips(
+                    algorithms = uiState.algorithms,
+                    selectedAlgorithm = uiState.selectedAlgorithm,
+                    onAlgorithmSelected = viewModel::selectAlgorithm
+                )
+            }
 
             Box(modifier = Modifier.fillMaxSize()) {
                 when {
-                    uiState.isLoading -> {
+                    uiState.isLoadingAlgorithms || uiState.isLoading -> {
                         LoadingIndicator()
                     }
-                    uiState.error != null && uiState.stocks.isEmpty() -> {
+                    uiState.error != null && uiState.predictions.isEmpty() -> {
                         ErrorState(
                             message = uiState.error ?: "Unknown error",
-                            onRetry = { viewModel.loadStocks() }
+                            onRetry = { viewModel.refresh() }
+                        )
+                    }
+                    uiState.predictions.isEmpty() && uiState.selectedAlgorithm != null -> {
+                        EmptyState(
+                            message = "No predictions available for this algorithm"
                         )
                     }
                     else -> {
@@ -112,12 +123,12 @@ fun StockListScreen(
                                 verticalArrangement = Arrangement.spacedBy(12.dp)
                             ) {
                                 items(
-                                    items = uiState.stocks,
-                                    key = { it.symbol }
-                                ) { stock ->
-                                    StockCard(
-                                        stock = stock,
-                                        onClick = { onStockClick(stock) }
+                                    items = uiState.predictions,
+                                    key = { "${it.algorithm.id}_${it.stock.symbol}" }
+                                ) { prediction ->
+                                    PredictionCard(
+                                        prediction = prediction,
+                                        onClick = { onStockClick(prediction.stock) }
                                     )
                                 }
                             }
