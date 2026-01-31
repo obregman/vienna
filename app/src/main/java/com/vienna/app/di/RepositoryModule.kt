@@ -1,8 +1,10 @@
 package com.vienna.app.di
 
+import com.vienna.app.data.repository.AlgorithmRepositoryImpl
 import com.vienna.app.data.repository.AnalysisRepositoryImpl
 import com.vienna.app.data.repository.PortfolioRepositoryImpl
 import com.vienna.app.data.repository.StockRepositoryImpl
+import com.vienna.app.domain.repository.AlgorithmRepository
 import com.vienna.app.domain.repository.AnalysisRepository
 import com.vienna.app.domain.repository.PortfolioRepository
 import com.vienna.app.domain.repository.StockRepository
@@ -27,4 +29,8 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindAnalysisRepository(impl: AnalysisRepositoryImpl): AnalysisRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindAlgorithmRepository(impl: AlgorithmRepositoryImpl): AlgorithmRepository
 }

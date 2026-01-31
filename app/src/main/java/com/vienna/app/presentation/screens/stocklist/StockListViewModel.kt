@@ -3,9 +3,11 @@ package com.vienna.app.presentation.screens.stocklist
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vienna.app.data.local.ErrorLogManager
-import com.vienna.app.domain.model.SortOption
+import com.vienna.app.domain.model.Algorithm
+import com.vienna.app.domain.model.AlgorithmPrediction
 import com.vienna.app.domain.model.Stock
-import com.vienna.app.domain.usecase.GetMarketDataUseCase
+import com.vienna.app.domain.usecase.GetAlgorithmsUseCase
+import com.vienna.app.domain.usecase.GetAlgorithmPredictionsUseCase
 import com.vienna.app.domain.usecase.ManagePortfolioUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -16,16 +18,19 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 data class StockListUiState(
-    val stocks: List<Stock> = emptyList(),
+    val algorithms: List<Algorithm> = emptyList(),
+    val selectedAlgorithm: Algorithm? = null,
+    val predictions: List<AlgorithmPrediction> = emptyList(),
     val isLoading: Boolean = false,
+    val isLoadingAlgorithms: Boolean = false,
     val error: String? = null,
-    val sortOption: SortOption = SortOption.VOLUME,
     val isRefreshing: Boolean = false
 )
 
 @HiltViewModel
 class StockListViewModel @Inject constructor(
-    private val getMarketDataUseCase: GetMarketDataUseCase,
+    private val getAlgorithmsUseCase: GetAlgorithmsUseCase,
+    private val getAlgorithmPredictionsUseCase: GetAlgorithmPredictionsUseCase,
     private val managePortfolioUseCase: ManagePortfolioUseCase,
     private val errorLogManager: ErrorLogManager
 ) : ViewModel() {
@@ -34,18 +39,54 @@ class StockListViewModel @Inject constructor(
     val uiState: StateFlow<StockListUiState> = _uiState.asStateFlow()
 
     init {
-        loadStocks()
+        loadAlgorithms()
     }
 
-    fun loadStocks(forceRefresh: Boolean = false) {
+    private fun loadAlgorithms() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoadingAlgorithms = true) }
+
+            getAlgorithmsUseCase()
+                .onSuccess { algorithms ->
+                    _uiState.update {
+                        it.copy(
+                            algorithms = algorithms,
+                            isLoadingAlgorithms = false
+                        )
+                    }
+                    // Auto-select first algorithm
+                    if (algorithms.isNotEmpty() && _uiState.value.selectedAlgorithm == null) {
+                        selectAlgorithm(algorithms.first())
+                    }
+                }
+                .onFailure { exception ->
+                    errorLogManager.logError("StockListViewModel", "Failed to load algorithms", exception)
+                    _uiState.update {
+                        it.copy(
+                            isLoadingAlgorithms = false,
+                            error = exception.message ?: "Failed to load algorithms"
+                        )
+                    }
+                }
+        }
+    }
+
+    fun selectAlgorithm(algorithm: Algorithm) {
+        if (algorithm != _uiState.value.selectedAlgorithm) {
+            _uiState.update { it.copy(selectedAlgorithm = algorithm, predictions = emptyList()) }
+            loadPredictions(algorithm.id)
+        }
+    }
+
+    private fun loadPredictions(algorithmId: String, forceRefresh: Boolean = false) {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = !forceRefresh, isRefreshing = forceRefresh, error = null) }
 
-            getMarketDataUseCase(_uiState.value.sortOption, forceRefresh)
-                .onSuccess { stocks ->
+            getAlgorithmPredictionsUseCase(algorithmId, forceRefresh)
+                .onSuccess { predictions ->
                     _uiState.update {
                         it.copy(
-                            stocks = stocks,
+                            predictions = predictions,
                             isLoading = false,
                             isRefreshing = false,
                             error = null
@@ -53,27 +94,22 @@ class StockListViewModel @Inject constructor(
                     }
                 }
                 .onFailure { exception ->
-                    errorLogManager.logError("StockListViewModel", "Failed to load stocks", exception)
+                    errorLogManager.logError("StockListViewModel", "Failed to load predictions", exception)
                     _uiState.update {
                         it.copy(
                             isLoading = false,
                             isRefreshing = false,
-                            error = exception.message ?: "Failed to load stocks"
+                            error = exception.message ?: "Failed to load predictions"
                         )
                     }
                 }
         }
     }
 
-    fun setSortOption(option: SortOption) {
-        if (option != _uiState.value.sortOption) {
-            _uiState.update { it.copy(sortOption = option) }
-            loadStocks()
-        }
-    }
-
     fun refresh() {
-        loadStocks(forceRefresh = true)
+        _uiState.value.selectedAlgorithm?.let { algorithm ->
+            loadPredictions(algorithm.id, forceRefresh = true)
+        }
     }
 
     fun addToPortfolio(stock: Stock, onSuccess: () -> Unit, onError: (String) -> Unit) {
