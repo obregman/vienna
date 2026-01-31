@@ -109,6 +109,7 @@ fun StockListScreen(
                     }
                     uiState.predictions.isEmpty() && uiState.selectedAlgorithm != null -> {
                         EmptyState(
+                            title = "No Predictions",
                             message = "No predictions available for this algorithm"
                         )
                     }
