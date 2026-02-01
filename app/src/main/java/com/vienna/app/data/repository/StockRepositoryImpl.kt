@@ -268,7 +268,7 @@ class StockRepositoryImpl @Inject constructor(
             val prices = response.timestamps.indices.mapNotNull { i ->
                 val timestamp = (response.timestamps[i] * 1000) // Convert to milliseconds
                 val price = response.closePrices.getOrNull(i) ?: return@mapNotNull null
-                val volume = response.volumes?.getOrNull(i) ?: 0L
+                val volume = response.volumes?.getOrNull(i)?.toLong() ?: 0L
                 PricePoint(timestamp = timestamp, price = price, volume = volume)
             }.sortedBy { it.timestamp }
 

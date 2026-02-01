@@ -68,7 +68,7 @@ data class FinnhubCandleResponse(
     @SerialName("t")
     val timestamps: List<Long>? = null,
     @SerialName("v")
-    val volumes: List<Long>? = null,
+    val volumes: List<Double>? = null,
     @SerialName("s")
     val status: String = "ok"
 )
